@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="//static.parastorage.com/services/js-sdk/1.109.0/js/wix.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <title>Title</title>
+</head>
+<body>
+<form>
+    <textarea id="update-message" name="message"></textarea>
+    <button type="button" id="submitBtn">Change message</button>
+</form>
+</body>
+<script>
+    const compId = Wix.Utils.getOrigCompId();
+    const instanceId = Wix.Utils.getInstanceId();
+    window.addEventListener('load', function() {
+        const params = `compId=${encodeURIComponent(compId)}&instanceId=${encodeURIComponent(instanceId)}`;
+        axios.get(`/message?${params}`)
+            .then(res => {
+                document.getElementById("read-message").innerHTML = res.data;
+            })
+            .catch(err => console.log(err));
+    }, false);
+
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        const newMessage = document.getElementById('update-message').value;
+        axios.post(`/message`, {message: newMessage, compId, instanceId})
+            .then(_ => {
+                document.getElementById("read-message").innerHTML = newMessage;
+            })
+            .catch(err => console.log(err))
+    })
+</script>
+</html>

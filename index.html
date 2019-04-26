@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="//static.parastorage.com/services/js-sdk/1.109.0/js/wix.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <title>Title</title>
+</head>
+<body>
+<p>This is your message (go to the settings to change it):</p>
+<p id="read-message"></p>
+</body>
+<script>
+    window.addEventListener('load', function() {
+        const compId = Wix.Utils.getCompId();
+        const instanceId = Wix.Utils.getInstanceId();
+        const params = `compId=${encodeURIComponent(compId)}&instanceId=${encodeURIComponent(instanceId)}`;
+        axios.get(`/message?${params}`)
+            .then(res => {
+                document.getElementById("read-message").innerHTML = res.data;
+            })
+            .catch(err => console.log(err))
+        console.log();
+    }, false);
+</script>
+</html>

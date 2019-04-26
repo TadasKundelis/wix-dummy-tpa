@@ -1,0 +1,16 @@
+{
+  "name": "tpa",
+  "version": "1.0.0",
+  "description": "test app for Wix website",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "Tadas Kundelis",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "mysql": "^2.17.1",
+    "nodemon": "^1.18.11"
+  }
+}
