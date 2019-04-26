@@ -1,14 +1,14 @@
-const connectMysql = require('./connectMysql');
+const createPool = require('./connectMysql');
 
-const connection = connectMysql();
+const pool = createPool();
 
 module.exports = {
     postComponent: function(compId, instanceId) {
         const query = `SELECT * FROM components WHERE compID = ?`;
-        connection.query(query, compId, function(err, rows){
+        pool.query(query, compId, function(err, rows){
             if(!rows.length) {
                 const query = `INSERT INTO components (compID, instanceID, message) VALUES (?, ?, ?)`;
-                connection.query(query, [compId, instanceId, '']);
+                pool.query(query, [compId, instanceId, '']);
             }
         })
     },
@@ -20,7 +20,7 @@ module.exports = {
                 res.end();
             }
         };
-        connection.query(query, params, callback);
+        pool.query(query, params, callback);
     },
     postMessage: function(req, res, params) {
         const query = `UPDATE components SET message = ? WHERE compID = ? AND instanceID = ?`;
@@ -28,6 +28,6 @@ module.exports = {
             res.write('updated successfully');
             res.end();
         }
-        connection.query(query, params, callback);
+        pool.query(query, params, callback);
     }
 }
