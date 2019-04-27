@@ -20,8 +20,8 @@ http.createServer(async function(req, res) {
     if(urlParts.pathname === '/') {
         const {compId, instance} = urlParts.query;
         const instanceId = extractInstanceID(instance);
-        mysqlQueries.postComponent(res, compId, instanceId);
         try {
+            await mysqlQueries.postComponent(compId, instanceId);
             const html = await readFile('./index.html');
             res.writeHead(200, {'Content-Type': 'text/html'});
             res.write(html);
@@ -31,21 +31,42 @@ http.createServer(async function(req, res) {
             console.log('err', err)
         }
     } else if (urlParts.pathname === '/settings' && req.method === 'GET') {
-        redirectToFile('./settings.html', res);
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(html);
-        res.end();
+        try {
+            const html = await readFile('./settings.html');
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.write(html);
+            res.end();
+        } catch(err) {
+            console.log('err', err)
+        }
     } else if (urlParts.pathname === '/message' && req.method === 'GET') {
         const {compId, instanceId} = urlParts.query;
-        mysqlQueries.getMessage(res, [compId, instanceId], );
+        try {
+            const result = await mysqlQueries.getMessage([compId, instanceId]);
+            if(result.length) {
+                res.write(result[0].message);
+                res.end();
+            }
+        } catch(err) {
+            console.log(err);
+        }
     } else if (urlParts.pathname === '/message' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => {
             body += chunk.toString();
         });
-        req.on('end', () => {
+        req.on('end', async () => {
             const {message, compId, instanceId} = JSON.parse(body);
-            mysqlQueries.postMessage(req, res, [message, compId, instanceId]);
+            try {
+                const result = await mysqlQueries.postMessage([message, compId, instanceId]);
+                if(result) {
+                    res.write('updated successfully');
+                    res.end();
+                }
+            } catch(err) {
+                console.log(err);
+            }
+
         });
     }
 }).listen(port, hostname, () => {
