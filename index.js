@@ -16,26 +16,23 @@ function extractInstanceID(instance) {
 const readFile = promisify(fs.readFile);
 
 http.createServer(async function(req, res) {
+    let response;
     const urlParts = url.parse(req.url, true);
     if(urlParts.pathname === '/') {
         const {compId, instance} = urlParts.query;
         const instanceId = extractInstanceID(instance);
         try {
             await mysqlQueries.postComponent(compId, instanceId);
-            const html = await readFile('./index.html');
+            response = await readFile('./index.html');
             res.writeHead(200, {'Content-Type': 'text/html'});
-            res.write(html);
-            res.end();
         }
         catch(err) {
             console.log('err', err)
         }
     } else if (urlParts.pathname === '/settings' && req.method === 'GET') {
         try {
-            const html = await readFile('./settings.html');
+            response = await readFile('./settings.html');
             res.writeHead(200, {'Content-Type': 'text/html'});
-            res.write(html);
-            res.end();
         } catch(err) {
             console.log('err', err)
         }
@@ -44,8 +41,7 @@ http.createServer(async function(req, res) {
         try {
             const result = await mysqlQueries.getMessage([compId, instanceId]);
             if(result.length) {
-                res.write(result[0].message);
-                res.end();
+                response = result[0].message;
             }
         } catch(err) {
             console.log(err);
@@ -58,17 +54,17 @@ http.createServer(async function(req, res) {
         req.on('end', async () => {
             const {message, compId, instanceId} = JSON.parse(body);
             try {
-                const result = await mysqlQueries.postMessage([message, compId, instanceId]);
+                const result = await mysqlQueries.updateMessage([message, compId, instanceId]);
                 if(result) {
-                    res.write('updated successfully');
-                    res.end();
+                    response ='updated successfully';
                 }
             } catch(err) {
                 console.log(err);
             }
-
         });
     }
+    res.write(response);
+    res.end();
 }).listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
