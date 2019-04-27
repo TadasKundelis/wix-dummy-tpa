@@ -1,6 +1,7 @@
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
+const { promisify } = require('util');
 const mysqlQueries = require('./mysqlQueries');
 const hostname = '127.0.0.1';
 const port = 3001;
@@ -12,27 +13,28 @@ function extractInstanceID(instance) {
     return JSON.parse(decodedInstanceData).instanceId;
 }
 
-function redirectToFile(path, res) {
-    fs.readFile(path, function(err, html) {
-        if(err) {
-            throw err;
-        }
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(html);
-        res.end();
-    })
-}
+const readFile = promisify(fs.readFile);
 
-
-http.createServer(function(req, res) {
+http.createServer(async function(req, res) {
     const urlParts = url.parse(req.url, true);
     if(urlParts.pathname === '/') {
         const {compId, instance} = urlParts.query;
         const instanceId = extractInstanceID(instance);
-        mysqlQueries.postComponent(compId, instanceId)
-        redirectToFile('./index.html', res);
+        mysqlQueries.postComponent(res, compId, instanceId);
+        try {
+            const html = await readFile('./index.html');
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.write(html);
+            res.end();
+        }
+        catch(err) {
+            console.log('err', err)
+        }
     } else if (urlParts.pathname === '/settings' && req.method === 'GET') {
         redirectToFile('./settings.html', res);
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.write(html);
+        res.end();
     } else if (urlParts.pathname === '/message' && req.method === 'GET') {
         const {compId, instanceId} = urlParts.query;
         mysqlQueries.getMessage(res, [compId, instanceId], );
