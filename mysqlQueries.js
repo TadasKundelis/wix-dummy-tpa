@@ -10,7 +10,7 @@ module.exports = {
     postComponent: async function(compId, instanceId) {
         const self = this;
         try {
-            const result = await self.componentExists();
+            const result = await self.componentExists(compId);
             if(!result.length) {
                 const query = `INSERT INTO components (compID, instanceID, message) VALUES (?, ?, ?)`;
                 return pool.query(query, [compId, instanceId, '']);
@@ -25,7 +25,7 @@ module.exports = {
         const query = `SELECT message FROM components WHERE compID = ? AND instanceID = ?`;
         return pool.query(query, params);
     },
-    postMessage: function(params) {
+    updateMessage: function(params) {
         const query = `UPDATE components SET message = ? WHERE compID = ? AND instanceID = ?`;
         return pool.query(query, params);
     }
