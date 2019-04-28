@@ -19,7 +19,7 @@
         const params = `compId=${encodeURIComponent(compId)}&instanceId=${encodeURIComponent(instanceId)}`;
         axios.get(`/message?${params}`)
             .then(res => {
-                document.getElementById("read-message").innerHTML = res.data;
+                document.getElementById("update-message").innerHTML = res.data;
             })
             .catch(err => console.log(err));
     }, false);
@@ -27,8 +27,8 @@
     document.getElementById('submitBtn').addEventListener('click', function() {
         const newMessage = document.getElementById('update-message').value;
         axios.post(`/message`, {message: newMessage, compId, instanceId})
-            .then(_ => {
-                document.getElementById("read-message").innerHTML = newMessage;
+            .then(res => {
+                console.log(res)
             })
             .catch(err => console.log(err))
     })
