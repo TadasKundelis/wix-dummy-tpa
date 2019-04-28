@@ -3,14 +3,14 @@ const createPool = require('./connectMysql');
 const pool = createPool();
 
 module.exports = {
-    componentExists: function(compId) {
+    getComponent: function(compId) {
         const query = `SELECT * FROM components WHERE compID = ?`;
         return  pool.query(query, compId);
     },
     postComponent: async function(compId, instanceId) {
         const self = this;
         try {
-            const result = await self.componentExists(compId);
+            const result = await self.getComponent(compId);
             if(!result.length) {
                 const query = `INSERT INTO components (compID, instanceID, message) VALUES (?, ?, ?)`;
                 return pool.query(query, [compId, instanceId, '']);
