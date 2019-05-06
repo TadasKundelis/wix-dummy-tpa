@@ -4,15 +4,28 @@
   "description": "test app for Wix website",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "test": "mocha --exit",
+    "test:code": "DEBUG='wix:*' mocha --exit 'test/**/*.{spec,it}.{ts,js}'"
   },
   "author": "Tadas Kundelis",
   "license": "ISC",
   "dependencies": {
+    "@wix/wix-mysql-testkit": "^1.0.66",
     "axios": "^0.18.0",
+    "body-parser": "^1.19.0",
     "dotenv": "^7.0.0",
-    "mysql": "^2.17.1",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "express-handlebars": "^3.0.2",
     "nodemon": "^1.18.11",
     "promise-mysql": "^3.3.1"
+  },
+  "devDependencies": {
+    "@wix/wix-testkit-base": "^1.0.918",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^6.1.4",
+    "shelljs": "^0.8.3"
   }
 }

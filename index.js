@@ -1,9 +1,7 @@
-const http = require('http');
-const url = require('url');
-const fs = require('fs');
-const { promisify } = require('util');
-const mysqlQueries = require('./mysqlQueries');
-const hostname = '127.0.0.1';
+const express = require('express');
+const handlebars = require('express-handlebars');
+const bodyParser = require('body-parser');
+const handleHttpRequest = require('./handleHttpRequest');
 const port = 3001;
 
 function extractInstanceID(instance) {
@@ -13,60 +11,42 @@ function extractInstanceID(instance) {
     return JSON.parse(decodedInstanceData).instanceId;
 }
 
-function sendResponse(res, output) {
-    res.write(output);
-    res.end();
-}
+const app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+app.engine('handlebars', handlebars({defaultLayout: 'main'}));
+app.set('view engine', 'handlebars');
 
-const readFile = promisify(fs.readFile);
-
-http.createServer(async function(req, res) {
-    const urlParts = url.parse(req.url, true);
-    if(urlParts.pathname === '/') {
-        const {compId, instance} = urlParts.query;
-        const instanceId = extractInstanceID(instance);
-        try {
-            await mysqlQueries.postComponent(compId, instanceId);
-            const html = await readFile('./index.html');
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            sendResponse(res, html);
-        }
-        catch(err) {
-            console.log('err', err)
-        }
-    } else if (urlParts.pathname === '/settings' && req.method === 'GET') {
-        try {
-            const html = await readFile('./settings.html');
-            res.writeHead(200, {'Content-Type': 'text/html'});
-            sendResponse(res, html);
-        } catch(err) {
-            console.log('err', err)
-        }
-    } else if (urlParts.pathname === '/message' && req.method === 'GET') {
-        const {compId, instanceId} = urlParts.query;
-        try {
-            const result = await mysqlQueries.getMessage([compId, instanceId]);
-            if(result.length) {
-                sendResponse(res, result[0].message);
-            }
-        } catch(err) {
-            console.log(err);
-        }
-    } else if (urlParts.pathname === '/message' && req.method === 'POST') {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', async () => {
-            const {message, compId, instanceId} = JSON.parse(body);
-            try {
-                await mysqlQueries.updateMessage([message, compId, instanceId]);
-                sendResponse(res,'updated successfully');
-            } catch(err) {
-                console.log(err);
-            }
-        });
-    }
-}).listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+app.get('/', async function(req, res) {
+    const {instance, compId} = req.query;
+    const instanceId = extractInstanceID(instance);
+    await handleHttpRequest.postComponent([compId, instanceId]);
+    const message = await handleHttpRequest.getMessage([compId, instanceId]);
+    res.render('home', {message})
 });
+
+app.get('/settings', async function(req, res) {
+    const {origCompId, instance} = req.query;
+    const instanceId = extractInstanceID(instance);
+    const message = await handleHttpRequest.getMessage([origCompId, instanceId]);
+    res.render('settings', {message, instanceId, compId: origCompId})
+});
+
+app.post('/message', async function(req, res) {
+    const {message} = req.body;
+    const {compId, instanceId} = req.query;
+    await handleHttpRequest.postMessage([message, compId, instanceId]);
+    res.render('settings', {message, instanceId, compId});
+});
+
+app.listen(port);
+
+
+
+/*
+
+const routes = [
+  { method: 'GET', path: '/', handler}
+];
+
+*/
+
