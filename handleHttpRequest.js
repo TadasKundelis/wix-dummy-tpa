@@ -1,4 +1,16 @@
-const mysqlQueries = require('./mysqlQueries');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const config = {
+    connectionLimit: 10,
+    host     : process.env.DB_HOST,
+    database : process.env.DATABASE,
+    user     : process.env.DB_USER,
+    password : process.env.DB_PASSWORD,
+};
+
+const mysqlQueries = require('./mysqlQueries')(config);
 
 module.exports = {
     postComponent: async function([compId, instanceId]) {
@@ -28,3 +40,4 @@ module.exports = {
         }
     }
 };
+

@@ -4,11 +4,11 @@ const bodyParser = require('body-parser');
 const handleHttpRequest = require('./handleHttpRequest');
 const port = 3001;
 
-function extractInstanceID(instance) {
+function extractInstanceData(instance) {
     const instanceData = instance.split('.')[1];
     const instanceBuffer = new Buffer.from(instanceData, 'base64');
     const decodedInstanceData = instanceBuffer.toString('utf-8');
-    return JSON.parse(decodedInstanceData).instanceId;
+    return JSON.parse(decodedInstanceData);
 }
 
 const app = express();
@@ -18,7 +18,7 @@ app.set('view engine', 'handlebars');
 
 app.get('/', async function(req, res) {
     const {instance, compId} = req.query;
-    const instanceId = extractInstanceID(instance);
+    const {instanceId} = extractInstanceData(instance);
     await handleHttpRequest.postComponent([compId, instanceId]);
     const message = await handleHttpRequest.getMessage([compId, instanceId]);
     res.render('home', {message})
@@ -26,9 +26,14 @@ app.get('/', async function(req, res) {
 
 app.get('/settings', async function(req, res) {
     const {origCompId, instance} = req.query;
-    const instanceId = extractInstanceID(instance);
-    const message = await handleHttpRequest.getMessage([origCompId, instanceId]);
-    res.render('settings', {message, instanceId, compId: origCompId})
+    const {instanceId, permissions} = extractInstanceData(instance);
+    console.log(permissions)
+    if(permissions != 'OWNER') {
+        res.render('settings', {error: "You're not authorized to modify the content"});
+    } else {
+        const message = await handleHttpRequest.getMessage([origCompId, instanceId]);
+        res.render('settings', {message, instanceId, compId: origCompId})
+    }
 });
 
 app.post('/message', async function(req, res) {
